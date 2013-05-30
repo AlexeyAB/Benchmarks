@@ -1,0 +1,4 @@
+Benchmarks
+==========
+
+Benchmark different algorithms.
