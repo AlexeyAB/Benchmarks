@@ -60,7 +60,7 @@ struct rand_string {
 
 
 template<size_t string_length >
-void test_case(const size_t cardinality = ROWS_COUNT) {
+void test_case(const size_t cardinality = ROWS_COUNT, const bool desc_order = false) {
 	double t_str1, t_str2, t_str_radix8, t_str3, t_str4;
 	std::cout.precision(3);
 
@@ -95,7 +95,8 @@ void test_case(const size_t cardinality = ROWS_COUNT) {
 
 		/// Test time for stable sort by key
 		start = clock();
-		thrust::stable_sort_by_key(d_v.begin(), d_v.end(), d_indecies.begin());
+		if(desc_order) thrust::stable_sort_by_key(d_v.begin(), d_v.end(), d_indecies.begin(), thrust::greater<T_str>());
+		else thrust::stable_sort_by_key(d_v.begin(), d_v.end(), d_indecies.begin());
 		cudaThreadSynchronize();
 		end = clock();
 		t_str1 = static_cast<double>(end-start)/CLOCKS_PER_SEC;
@@ -116,7 +117,8 @@ void test_case(const size_t cardinality = ROWS_COUNT) {
 
 		/// Test time for stable sort by key
 		start = clock();
-		thrust::stable_sort_by_key(d_v.begin(), d_v.end(), d_indecies.begin());
+		if(desc_order) thrust::stable_sort_by_key(d_v.begin(), d_v.end(), d_indecies.begin(), thrust::greater<T_str>());
+		else thrust::stable_sort_by_key(d_v.begin(), d_v.end(), d_indecies.begin());
 		cudaThreadSynchronize();
 		end = clock();
 		t_str2 = static_cast<double>(end-start)/CLOCKS_PER_SEC;
@@ -144,7 +146,8 @@ void test_case(const size_t cardinality = ROWS_COUNT) {
 		/// Test time for stable sort by key
 		start = clock();
 		thrust::transform(ptr, ptr + ROWS_COUNT, ptr, T_swap_le_be_64());
-		thrust::stable_sort_by_key(ptr, ptr + ROWS_COUNT, d_indecies.begin());
+		if(desc_order) thrust::stable_sort_by_key(ptr, ptr + ROWS_COUNT, d_indecies.begin(), thrust::greater<unsigned long long>());
+		else thrust::stable_sort_by_key(ptr, ptr + ROWS_COUNT, d_indecies.begin());
 		thrust::transform(ptr, ptr + ROWS_COUNT, ptr, T_swap_le_be_64());
 		cudaThreadSynchronize();
 		end = clock();
@@ -169,7 +172,8 @@ void test_case(const size_t cardinality = ROWS_COUNT) {
 
 		/// Test time for stable sort by key
 		start = clock();
-		thrust::stable_sort_by_key(d_v.begin(), d_v.end(), d_indecies.begin());
+		if(desc_order) thrust::stable_sort_by_key(d_v.begin(), d_v.end(), d_indecies.begin(), thrust::greater<T_str>());
+		else thrust::stable_sort_by_key(d_v.begin(), d_v.end(), d_indecies.begin());
 		cudaThreadSynchronize();
 		end = clock();
 		t_str3 = static_cast<double>(end-start)/CLOCKS_PER_SEC;
@@ -193,7 +197,8 @@ void test_case(const size_t cardinality = ROWS_COUNT) {
 
 		/// Test time for stable sort by key
 		start = clock();
-		thrust::stable_sort_by_key(d_v.begin(), d_v.end(), d_indecies.begin());
+		if(desc_order) thrust::stable_sort_by_key(d_v.begin(), d_v.end(), d_indecies.begin(), thrust::greater<T_str>());
+		else thrust::stable_sort_by_key(d_v.begin(), d_v.end(), d_indecies.begin());
 		cudaThreadSynchronize();
 		end = clock();
 		t_str4 = static_cast<double>(end-start)/CLOCKS_PER_SEC;
@@ -227,12 +232,23 @@ int main() {
 	const size_t cardinality = 1000;
 	std::cout << std::endl << "With only number of unique strings equal to cardinality = " << cardinality << std::endl;
 	// with only number of unique strings equal to cardinality = 1000
-	//test_case<4>(cardinality);
+	test_case<4>(cardinality);
 	test_case<8>(cardinality);
 	test_case<10>(cardinality);
 	test_case<40>(cardinality);
 	test_case<50>(cardinality);
 	test_case<100>(cardinality);
+	std::cout << "=======================================================" << std::endl;
+
+	std::cout << std::endl << "With only number of unique strings equal to cardinality = " << cardinality << std::endl;
+	std::cout << "Sort by greater!" << std::endl;
+	// with only number of unique strings equal to cardinality = 1000
+	test_case<4>(cardinality, true);
+	test_case<8>(cardinality, true);
+	test_case<10>(cardinality, true);
+	test_case<40>(cardinality, true);
+	test_case<50>(cardinality, true);
+	test_case<100>(cardinality, true);
 	std::cout << "=======================================================" << std::endl;
 
 
