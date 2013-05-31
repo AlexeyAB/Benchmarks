@@ -216,23 +216,23 @@ int main() {
 	std::cout << std::endl << "With all unique strings, cardinality = " << ROWS_COUNT << std::endl;
 
 	// with all unique strings, cardinality = ROWS_COUNT
-	test_case<4>();
+/*	test_case<4>();
 	test_case<8>();
 	test_case<10>();
 	test_case<40>();
 	test_case<50>();
 	test_case<100>();
 	std::cout << "=======================================================" << std::endl;
-
+*/
 	const size_t cardinality = 1000;
 	std::cout << std::endl << "With only number of unique strings equal to cardinality = " << cardinality << std::endl;
 	// with only number of unique strings equal to cardinality = 1000
-	test_case<4>(cardinality);
-	test_case<8>(cardinality);
+	//test_case<4>(cardinality);
+	//test_case<8>(cardinality);
 	test_case<10>(cardinality);
-	test_case<40>(cardinality);
+	test_case<30>(cardinality);
 	test_case<50>(cardinality);
-	test_case<100>(cardinality);
+	//test_case<100>(cardinality);
 	std::cout << "=======================================================" << std::endl;
 
 
