@@ -5,6 +5,12 @@
 #include <thrust/generate.h>
 #include <thrust/sequence.h>
 #include <thrust/mismatch.h>
+
+#include <thrust/iterator/counting_iterator.h>
+#include <thrust/iterator/transform_iterator.h>
+#include <thrust/functional.h>
+
+
 #include <cstdlib>
 #include <ctime>
 #include <climits>
@@ -19,7 +25,7 @@ template<typename Str>
 struct rand_string {
 	__host__ __device__ Str operator()() {
 		Str str;
-		for(size_t i = 0; i < Str::size; ++i) str.data[i] = rand() % 256;
+		for(size_t i = 0; i < Str::size; ++i) str.data[i] = rand() % 52;
 		return str;
 	}
 };
@@ -202,6 +208,40 @@ void test_case(const size_t cardinality = ROWS_COUNT, const bool desc_order = fa
 		std::cout << ",data " << (thrust::equal(h_v_result.data(), h_v_result.data() + ROWS_COUNT, (T_str *)h_v1.data())?"equal":"differ") << std::endl;
 	}
 
+
+	{
+		typedef typename Str<string_length> T_str;
+		/// copy host to device
+		thrust::device_vector<T_str> d_v = h_v;
+
+		/// generate sequence indecies
+		thrust::sequence(d_indecies.begin(), d_indecies.end());
+		cudaThreadSynchronize();
+		
+		//typedef unsigned char T_string;
+		thrust::device_ptr<unsigned char> d_ptr(reinterpret_cast<unsigned char *>(thrust::raw_pointer_cast(d_v.data())));
+
+		/// Test time for stable sort by key
+		start = clock();
+		if(desc_order) {
+			thrust::sort(d_indecies.begin(), d_indecies.end(), T_string_greater<thrust::device_ptr<unsigned char> >(string_length, d_ptr));
+		} else {
+			thrust::sort(d_indecies.begin(), d_indecies.end(), T_string_less<thrust::device_ptr<unsigned char> >(string_length, d_ptr));
+		}
+		//thrust::transform(d_indecies.begin(), d_indecies.end(), thrust::make_discard_iterator(), thrust::negate<unsigned int>());
+		cudaThreadSynchronize();
+		end = clock();
+		t_str5 = static_cast<double>(end-start)/CLOCKS_PER_SEC;
+		std::cout << "Dynamic(" << string_length << ") Elapsed: " << t_str5 << " sec. ";
+		std::cout << "Faster than Str1: " << t_str1/t_str5 << " X. ";
+		h_i_result = d_indecies;
+		std::cout << "Indexes " << (thrust::equal(h_i1.begin(), h_i1.end(), h_i_result.begin())?"equal":"differ");
+		thrust::host_vector<T_str > h_v_result = d_v;
+		std::cout << ",data " << (thrust::equal(h_v_result.data(), h_v_result.data() + ROWS_COUNT, (T_str *)h_v1.data())?"equal":"differ") << std::endl;
+	}
+
+
+
 	std::cout << "End ----------------------------------------" << std::endl;
 }
 // --------------------------------------------------------------------------------
@@ -223,10 +263,12 @@ int main() {
 */
 	const size_t cardinality = 1000;
 	std::cout << std::endl << "With only number of unique strings equal to cardinality = " << cardinality << std::endl;
-	// with only number of unique strings equal to cardinality = 1000
+	// with only number of unique strings equal to cardinality = 1000	
 	test_case<4>(cardinality);
+	test_case<5>(cardinality);
 	test_case<8>(cardinality);
 	test_case<10>(cardinality);
+	test_case<25>(cardinality);
 	test_case<40>(cardinality);
 	test_case<50>(cardinality);
 	test_case<90>(cardinality);
@@ -237,14 +279,16 @@ int main() {
 	std::cout << "Sort by greater!" << std::endl;
 	// with only number of unique strings equal to cardinality = 1000
 	test_case<4>(cardinality, true);
+	test_case<5>(cardinality, true);
 	test_case<8>(cardinality, true);
 	test_case<10>(cardinality, true);
+	test_case<25>(cardinality, true);
 	test_case<40>(cardinality, true);
 	test_case<50>(cardinality, true);
 	test_case<90>(cardinality, true);
 	test_case<100>(cardinality, true);
 	std::cout << "=======================================================" << std::endl;
-
+	
 
 	// Test swap little endian to big endian
 	unsigned long long a[2] = { 1 + (2<<(8*1)) + (3<<(8*2)) + (4<<(8*3)) + 

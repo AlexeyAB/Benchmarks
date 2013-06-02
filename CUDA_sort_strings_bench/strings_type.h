@@ -129,16 +129,24 @@ struct Str2 {
 		unsigned short int const* data2_first = reinterpret_cast<unsigned short int const*>(data);
 		unsigned short int const* data2_second = reinterpret_cast<unsigned short int const *>(other.data);
 		
-		#pragma unroll
-		for(int i = 0; i < bytes2_count; i++) {
-			if(swap_le_be_16(data2_first[i]) > swap_le_be_16(data2_second[i])) return false;
-			else if(swap_le_be_16(data2_first[i]) < swap_le_be_16(data2_second[i])) return true;
-		}
+		if(size % 2 == 0) {
+			#pragma unroll
+			for(int i = 0; i < bytes2_count; i++) {
+				if(swap_le_be_16(data2_first[i]) > swap_le_be_16(data2_second[i])) return false;
+				else if(swap_le_be_16(data2_first[i]) < swap_le_be_16(data2_second[i])) return true;
+			}
 		
-		#pragma unroll
-		for(int i = bytes2_count*2; i < size; i++) {
-			if(data[i] > other.data[i]) return false;
-			else if(data[i] < other.data[i]) return true;
+			#pragma unroll
+			for(int i = bytes2_count*2; i < size; i++) {
+				if(data[i] > other.data[i]) return false;
+				else if(data[i] < other.data[i]) return true;
+			}
+		} else {
+			#pragma unroll
+			for(int i = 0; i < size; i++) {
+				if(data[i] > other.data[i]) return false;
+				else if(data[i] < other.data[i]) return true;
+			}
 		}
 		return false;
 	}
@@ -149,16 +157,24 @@ struct Str2 {
 		unsigned short int const* data2_first = reinterpret_cast<unsigned short int const*>(data);
 		unsigned short int const* data2_second = reinterpret_cast<unsigned short int const *>(other.data);
 		
-		#pragma unroll
-		for(int i = 0; i < bytes2_count; i++) {
-			if(swap_le_be_16(data2_first[i]) > swap_le_be_16(data2_second[i])) return true;
-			else if(swap_le_be_16(data2_first[i]) < swap_le_be_16(data2_second[i])) return false;
-		}
+		if(size % 2 == 0) {
+			#pragma unroll
+			for(int i = 0; i < bytes2_count; i++) {
+				if(swap_le_be_16(data2_first[i]) > swap_le_be_16(data2_second[i])) return true;
+				else if(swap_le_be_16(data2_first[i]) < swap_le_be_16(data2_second[i])) return false;
+			}
 		
-		#pragma unroll
-		for(int i = bytes2_count*2; i < size; i++) {
-			if(data[i] > other.data[i]) return true;
-			else if(data[i] < other.data[i]) return false;
+			#pragma unroll
+			for(int i = bytes2_count*2; i < size; i++) {
+				if(data[i] > other.data[i]) return true;
+				else if(data[i] < other.data[i]) return false;
+			}
+		} else {
+			#pragma unroll
+			for(int i = 0; i < size; i++) {
+				if(data[i] > other.data[i]) return true;
+				else if(data[i] < other.data[i]) return false;
+			}
 		}
 		return false;
 	}
@@ -167,16 +183,23 @@ struct Str2 {
 	__host__ __device__
 	bool operator!=(const Str2& other) const
 	{
-		unsigned short int const* data2_first = reinterpret_cast<unsigned short int const*>(data);
-		unsigned short int const* data2_second = reinterpret_cast<unsigned short int const*>(other.data);
-		#pragma unroll
-		for(unsigned int i = 0; i < bytes2_count; i++) {
-			if(swap_le_be_16(data2_first[i]) != swap_le_be_16(data2_second[i])) return true;
-		}
+		if(size % 2 == 0) {
+			unsigned short int const* data2_first = reinterpret_cast<unsigned short int const*>(data);
+			unsigned short int const* data2_second = reinterpret_cast<unsigned short int const*>(other.data);
+			#pragma unroll
+			for(unsigned int i = 0; i < bytes2_count; i++) {
+				if(swap_le_be_16(data2_first[i]) != swap_le_be_16(data2_second[i])) return true;
+			}
 
-		#pragma unroll
-		for(unsigned int i = bytes2_count*2; i < size; i++) {
-			if(data[i] != other.data[i]) return true;
+			#pragma unroll
+			for(unsigned int i = bytes2_count*2; i < size; i++) {
+				if(data[i] != other.data[i]) return true;
+			}
+		} else {
+			#pragma unroll
+			for(unsigned int i = 0; i < size; i++) {
+				if(data[i] != other.data[i]) return true;
+			}
 		}
 		return false;
 	}
@@ -216,7 +239,7 @@ struct Str3 {
 	/// Uniform comparison
 	__host__ __device__
 	unsigned char comparison(const Str3& other) const {
-			if(size % 4 == 0) {
+		if(size % 4 == 0) {
 			/// Speedup in 1.5 - 3.5 times (compare aligned data by 4 bytes)
 			static_assert(sizeof(unsigned int) == 4, "You can't use this optimized class, because it can't compare data by 4 bytes!");
 			unsigned int const* data4_first = reinterpret_cast<unsigned int const*>(data);
@@ -226,7 +249,7 @@ struct Str3 {
 				if(swap_le_be_32(data4_first[i]) > swap_le_be_32(data4_second[i])) return 0;
 				else if(swap_le_be_32(data4_first[i]) < swap_le_be_32(data4_second[i])) return 1;
 			}
-		} else {			
+		} else if(size % 2 == 0) {				
 			/// Speedup in 1.5 - 2 times (compare unaligned data by 2 bytes)
 			unsigned short int const* data2_first = reinterpret_cast<unsigned short int const*>(data);
 			unsigned short int const* data2_second = reinterpret_cast<unsigned short int const *>(other.data);
@@ -242,6 +265,12 @@ struct Str3 {
 				if(data[i] > other.data[i]) return 0;
 				else if(data[i] < other.data[i]) return 1;
 			}			
+		} else {
+			#pragma unroll
+			for(unsigned int i = 0; i < size; i++) {
+				if(data[i] > other.data[i]) return 0;
+				else if(data[i] < other.data[i]) return 1;
+			}	
 		}
 		return 2;
 	}
@@ -274,7 +303,7 @@ struct Str3 {
 			for(unsigned int i = 0; i < size/4; i++) {
 				if(swap_le_be_32(data4_first[i]) != swap_le_be_32(data4_second[i])) return true;
 			}
-		} else {
+		} else if(size % 2 == 0) {
 			unsigned short int const* data2_first = reinterpret_cast<unsigned short int const*>(data);
 			unsigned short int const* data2_second = reinterpret_cast<unsigned short int const*>(other.data);
 			#pragma unroll
@@ -284,6 +313,11 @@ struct Str3 {
 
 			#pragma unroll
 			for(unsigned int i = bytes2_count*2; i < size; i++) {
+				if(data[i] != other.data[i]) return true;
+			}
+		} else {
+			#pragma unroll
+			for(unsigned int i = 0; i < size; i++) {
 				if(data[i] != other.data[i]) return true;
 			}
 		}
@@ -325,7 +359,7 @@ struct Str4 {
 	/// Uniform comparison
 	__host__ __device__
 	unsigned char comparison(const Str4& other) const {
-			if(size % 4 == 0) {
+		if(size % 4 == 0) {
 			/// Speedup in 1.5 - 3.5 times (compare aligned data by 4 bytes)
 			static_assert(sizeof(unsigned int) == 4, "You can't use this optimized class, because it can't compare data by 4 bytes!");
 			unsigned int const* data4_first = reinterpret_cast<unsigned int const*>(data);
@@ -335,7 +369,7 @@ struct Str4 {
 				if(swap_le_be_32(data4_first[i]) > swap_le_be_32(data4_second[i])) return 0;
 				else if(swap_le_be_32(data4_first[i]) < swap_le_be_32(data4_second[i])) return 1;
 			}
-		} else {			
+		} else if(size % 2 == 0) {			
 			/// Speedup in 2 - 2.5 times (compare unaligned data by 2 bytes)
 			unsigned short int const* data2_first = reinterpret_cast<unsigned short int const*>(data);
 			unsigned short int const* data2_second = reinterpret_cast<unsigned short int const *>(other.data);
@@ -381,6 +415,12 @@ struct Str4 {
 				if(data[i] > other.data[i]) return 0;
 				else if(data[i] < other.data[i]) return 1;
 			}			
+		} else {
+			#pragma unroll
+			for(unsigned int i = 0; i < size; i++) {
+				if(data[i] > other.data[i]) return 0;
+				else if(data[i] < other.data[i]) return 1;
+			}
 		}
 		return 2;
 	}
@@ -413,7 +453,7 @@ struct Str4 {
 			for(unsigned int i = 0; i < size/4; i++) {
 				if(swap_le_be_32(data4_first[i]) != swap_le_be_32(data4_second[i])) return true;
 			}
-		} else {
+		} else if(size % 2 == 0) {	
 			unsigned short int const* data2_first = reinterpret_cast<unsigned short int const*>(data);
 			unsigned short int const* data2_second = reinterpret_cast<unsigned short int const*>(other.data);
 			#pragma unroll
@@ -423,6 +463,11 @@ struct Str4 {
 
 			#pragma unroll
 			for(unsigned int i = bytes2_count*2; i < size; i++) {
+				if(data[i] != other.data[i]) return true;
+			}
+		} else {
+			#pragma unroll
+			for(unsigned int i = 0; i < size; i++) {
 				if(data[i] != other.data[i]) return true;
 			}
 		}
@@ -510,12 +555,18 @@ struct Str5 {
 				if(swap_le_be_32(data4_first[i]) > swap_le_be_32(data4_second[i])) return 0;
 				else if(swap_le_be_32(data4_first[i]) < swap_le_be_32(data4_second[i])) return 1;
 			}
-		} else {			
+		} else if(size % 2 == 0) {			
 			/// Speedup in 2 - 2.5 times (compare unaligned data by 2 bytes)
 			unsigned short int const* data2_first = reinterpret_cast<unsigned short int const*>(data);
 			unsigned short int const* data2_second = reinterpret_cast<unsigned short int const *>(other.data);
 
-			return T_unroll_compare_less<bytes2_count>().operator()(data2_first, data2_second, size%2);		
+			return T_unroll_compare_less<bytes2_count>().operator()(data2_first, data2_second, (bytes2_count*2 < size));
+		} else {
+			#pragma unroll
+			for(unsigned int i = 0; i < size; i++) {
+				if(data[i] > other.data[i]) return 0;
+				else if(data[i] < other.data[i]) return 1;
+			}
 		}
 		return 2;
 	}
@@ -548,7 +599,7 @@ struct Str5 {
 			for(unsigned int i = 0; i < size/4; i++) {
 				if(swap_le_be_32(data4_first[i]) != swap_le_be_32(data4_second[i])) return true;
 			}
-		} else {
+		} else if(size % 2 == 0) {	
 			unsigned short int const* data2_first = reinterpret_cast<unsigned short int const*>(data);
 			unsigned short int const* data2_second = reinterpret_cast<unsigned short int const*>(other.data);
 			#pragma unroll
@@ -558,6 +609,11 @@ struct Str5 {
 
 			#pragma unroll
 			for(unsigned int i = bytes2_count*2; i < size; i++) {
+				if(data[i] != other.data[i]) return true;
+			}
+		} else {
+			#pragma unroll
+			for(unsigned int i = 0; i < size; i++) {
 				if(data[i] != other.data[i]) return true;
 			}
 		}
@@ -570,6 +626,45 @@ struct Str5 {
 	__host__ __device__ bool operator==(const Str5& str) const { return !(*this != str); }
 };
 //---------------------------------------------------------------------------
+
+template<typename T_ptr, typename T_index = unsigned int>
+struct T_string_less {
+	const size_t size;
+	const T_ptr ptr;
+	T_string_less(const size_t _size, const T_ptr _ptr) : size(_size), ptr(_ptr) {}
+
+	__host__ __device__ 
+	bool operator()(const T_index &lhs, const T_index &rhs) const {
+		const T_ptr l_ptr = ptr + lhs*size;
+		const T_ptr r_ptr = ptr + rhs*size;
+
+		for(int i = 0; i < size; i++) {
+			if(l_ptr[i] > r_ptr[i]) return false;
+			else if(l_ptr[i] < r_ptr[i]) return true;
+		}
+		return false;
+	}
+};
+
+
+template<typename T_ptr, typename T_index = unsigned int>
+struct T_string_greater {
+	const size_t size;
+	const T_ptr ptr;
+	T_string_greater(const size_t _size, const T_ptr _ptr) : size(_size), ptr(_ptr) {}
+
+	__host__ __device__ 
+	bool operator()(const T_index &lhs, const T_index &rhs) const {
+		const T_ptr l_ptr = ptr + lhs*size;
+		const T_ptr r_ptr = ptr + rhs*size;
+
+		for(int i = 0; i < size; i++) {
+			if(l_ptr[i] > r_ptr[i]) return true;
+			else if(l_ptr[i] < r_ptr[i]) return false;
+		}
+		return false;
+	}
+};
 
 
 
