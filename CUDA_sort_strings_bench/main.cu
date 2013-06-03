@@ -34,7 +34,7 @@ struct rand_string {
 
 template<size_t string_length >
 void test_case(const size_t cardinality = ROWS_COUNT, const bool desc_order = false) {
-	double t_str1, t_str2, t_str_radix8, t_str3, t_str4, t_str5;
+	double t_str1, t_str2, t_str3, t_str4, t_str5, t_str_radix1, t_str_radix2,   t_str_radix4, t_str_radix8;
 	std::cout.precision(3);
 
 	/// Timers
@@ -78,6 +78,7 @@ void test_case(const size_t cardinality = ROWS_COUNT, const bool desc_order = fa
 		h_v1 = d_v;
 	}
 
+	/*
 	{
 		typedef typename Str2<string_length> T_str;
 		/// copy host to device
@@ -127,6 +128,7 @@ void test_case(const size_t cardinality = ROWS_COUNT, const bool desc_order = fa
 		thrust::host_vector<T_str > h_v_result = d_v;
 		std::cout << ",data " << (thrust::equal(h_v_result.data(), h_v_result.data() + ROWS_COUNT, (T_str *)h_v1.data())?"equal":"differ") << std::endl;
 	}
+	*/
 
 	{
 		typedef typename Str4<string_length> T_str;
@@ -153,6 +155,7 @@ void test_case(const size_t cardinality = ROWS_COUNT, const bool desc_order = fa
 		std::cout << ",data " << (thrust::equal(h_v_result.data(), h_v_result.data() + ROWS_COUNT, (T_str *)h_v1.data())?"equal":"differ") << std::endl;
 	}
 
+	/*
 	{
 		typedef typename Str5<string_length> T_str;
 		/// copy host to device
@@ -172,6 +175,97 @@ void test_case(const size_t cardinality = ROWS_COUNT, const bool desc_order = fa
 		t_str5 = static_cast<double>(end-start)/CLOCKS_PER_SEC;
 		std::cout << "Str5<" << string_length << "> Elapsed: " << t_str5 << " sec. ";
 		std::cout << "Faster than Str1: " << t_str1/t_str5 << " X. ";
+		h_i_result = d_indecies;
+		std::cout << "Indexes " << (thrust::equal(h_i1.begin(), h_i1.end(), h_i_result.begin())?"equal":"differ");
+		thrust::host_vector<T_str > h_v_result = d_v;
+		std::cout << ",data " << (thrust::equal(h_v_result.data(), h_v_result.data() + ROWS_COUNT, (T_str *)h_v1.data())?"equal":"differ") << std::endl;
+	}
+	*/
+
+	if(string_length == 1)
+	{
+		typedef typename Str4<1> T_str;
+		/// copy host to device
+		thrust::device_vector<T_str > d_v(ROWS_COUNT);
+		thrust::copy((T_str *)h_v.data(), (T_str *)h_v.data() + ROWS_COUNT, d_v.data());
+
+		/// generate sequence indecies
+		thrust::sequence(d_indecies.begin(), d_indecies.end());
+
+		thrust::device_ptr<unsigned char> ptr( reinterpret_cast<unsigned char *>(thrust::raw_pointer_cast(d_v.data() )));
+		cudaThreadSynchronize();
+
+		/// Test time for stable sort by key
+		start = clock();
+		thrust::transform(ptr, ptr + ROWS_COUNT, ptr, T_swap_le_be_8());
+		if(desc_order) thrust::stable_sort_by_key(ptr, ptr + ROWS_COUNT, d_indecies.begin(), thrust::greater<unsigned char>());
+		else thrust::stable_sort_by_key(ptr, ptr + ROWS_COUNT, d_indecies.begin());
+		thrust::transform(ptr, ptr + ROWS_COUNT, ptr, T_swap_le_be_8());
+		cudaThreadSynchronize();
+		end = clock();
+		t_str_radix1 = static_cast<double>(end-start)/CLOCKS_PER_SEC;
+		std::cout << "Str<1> radix. Elapsed: " << t_str_radix1 << " sec. ";
+		std::cout << "Faster than Str1: " << t_str1/t_str_radix1 << " X. ";
+		h_i_result = d_indecies;
+		std::cout << "Indexes " << (thrust::equal(h_i1.begin(), h_i1.end(), h_i_result.begin())?"equal":"differ");
+		thrust::host_vector<T_str > h_v_result = d_v;
+		std::cout << ",data " << (thrust::equal(h_v_result.data(), h_v_result.data() + ROWS_COUNT, (T_str *)h_v1.data())?"equal":"differ") << std::endl;
+	}
+
+	if(string_length == 2)
+	{
+		typedef typename Str4<2> T_str;
+		/// copy host to device
+		thrust::device_vector<T_str > d_v(ROWS_COUNT);
+		thrust::copy((T_str *)h_v.data(), (T_str *)h_v.data() + ROWS_COUNT, d_v.data());
+
+		/// generate sequence indecies
+		thrust::sequence(d_indecies.begin(), d_indecies.end());
+
+		thrust::device_ptr<unsigned short int> ptr( reinterpret_cast<unsigned short int *>(thrust::raw_pointer_cast(d_v.data() )));
+		cudaThreadSynchronize();
+
+		/// Test time for stable sort by key
+		start = clock();
+		thrust::transform(ptr, ptr + ROWS_COUNT, ptr, T_swap_le_be_16());
+		if(desc_order) thrust::stable_sort_by_key(ptr, ptr + ROWS_COUNT, d_indecies.begin(), thrust::greater<unsigned short int>());
+		else thrust::stable_sort_by_key(ptr, ptr + ROWS_COUNT, d_indecies.begin());
+		thrust::transform(ptr, ptr + ROWS_COUNT, ptr, T_swap_le_be_16());
+		cudaThreadSynchronize();
+		end = clock();
+		t_str_radix2 = static_cast<double>(end-start)/CLOCKS_PER_SEC;
+		std::cout << "Str<2> radix. Elapsed: " << t_str_radix2 << " sec. ";
+		std::cout << "Faster than Str1: " << t_str1/t_str_radix2 << " X. ";
+		h_i_result = d_indecies;
+		std::cout << "Indexes " << (thrust::equal(h_i1.begin(), h_i1.end(), h_i_result.begin())?"equal":"differ");
+		thrust::host_vector<T_str > h_v_result = d_v;
+		std::cout << ",data " << (thrust::equal(h_v_result.data(), h_v_result.data() + ROWS_COUNT, (T_str *)h_v1.data())?"equal":"differ") << std::endl;
+	}
+
+	if(string_length == 4)
+	{
+		typedef typename Str4<4> T_str;
+		/// copy host to device
+		thrust::device_vector<T_str > d_v(ROWS_COUNT);
+		thrust::copy((T_str *)h_v.data(), (T_str *)h_v.data() + ROWS_COUNT, d_v.data());
+
+		/// generate sequence indecies
+		thrust::sequence(d_indecies.begin(), d_indecies.end());
+
+		thrust::device_ptr<unsigned int> ptr( reinterpret_cast<unsigned int *>(thrust::raw_pointer_cast(d_v.data() )));
+		cudaThreadSynchronize();
+
+		/// Test time for stable sort by key
+		start = clock();
+		thrust::transform(ptr, ptr + ROWS_COUNT, ptr, T_swap_le_be_32());
+		if(desc_order) thrust::stable_sort_by_key(ptr, ptr + ROWS_COUNT, d_indecies.begin(), thrust::greater<unsigned int>());
+		else thrust::stable_sort_by_key(ptr, ptr + ROWS_COUNT, d_indecies.begin());
+		thrust::transform(ptr, ptr + ROWS_COUNT, ptr, T_swap_le_be_32());
+		cudaThreadSynchronize();
+		end = clock();
+		t_str_radix4 = static_cast<double>(end-start)/CLOCKS_PER_SEC;
+		std::cout << "Str<4> radix. Elapsed: " << t_str_radix4 << " sec. ";
+		std::cout << "Faster than Str1: " << t_str1/t_str_radix4 << " X. ";
 		h_i_result = d_indecies;
 		std::cout << "Indexes " << (thrust::equal(h_i1.begin(), h_i1.end(), h_i_result.begin())?"equal":"differ");
 		thrust::host_vector<T_str > h_v_result = d_v;
@@ -208,7 +302,7 @@ void test_case(const size_t cardinality = ROWS_COUNT, const bool desc_order = fa
 		std::cout << ",data " << (thrust::equal(h_v_result.data(), h_v_result.data() + ROWS_COUNT, (T_str *)h_v1.data())?"equal":"differ") << std::endl;
 	}
 
-
+	/*
 	{
 		typedef typename Str<string_length> T_str;
 		/// copy host to device
@@ -239,7 +333,7 @@ void test_case(const size_t cardinality = ROWS_COUNT, const bool desc_order = fa
 		thrust::host_vector<T_str > h_v_result = d_v;
 		std::cout << ",data " << (thrust::equal(h_v_result.data(), h_v_result.data() + ROWS_COUNT, (T_str *)h_v1.data())?"equal":"differ") << std::endl;
 	}
-
+	*/
 
 
 	std::cout << "End ----------------------------------------" << std::endl;
@@ -264,8 +358,13 @@ int main() {
 	const size_t cardinality = 1000;
 	std::cout << std::endl << "With only number of unique strings equal to cardinality = " << cardinality << std::endl;
 	// with only number of unique strings equal to cardinality = 1000	
+	test_case<1>(cardinality);
+	test_case<2>(cardinality);
+	test_case<3>(cardinality);
 	test_case<4>(cardinality);
 	test_case<5>(cardinality);
+	test_case<6>(cardinality);
+	test_case<7>(cardinality);
 	test_case<8>(cardinality);
 	test_case<10>(cardinality);
 	test_case<25>(cardinality);
@@ -278,8 +377,13 @@ int main() {
 	std::cout << std::endl << "With only number of unique strings equal to cardinality = " << cardinality << std::endl;
 	std::cout << "Sort by greater!" << std::endl;
 	// with only number of unique strings equal to cardinality = 1000
+	test_case<1>(cardinality, true);
+	test_case<2>(cardinality, true);
+	test_case<3>(cardinality, true);
 	test_case<4>(cardinality, true);
 	test_case<5>(cardinality, true);
+	test_case<6>(cardinality, true);
+	test_case<7>(cardinality, true);
 	test_case<8>(cardinality, true);
 	test_case<10>(cardinality, true);
 	test_case<25>(cardinality, true);

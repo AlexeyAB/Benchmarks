@@ -52,6 +52,11 @@ struct T_swap_le_be_16 {
 				(val>>8);		// move byte 1 to byte 0
 	}
 };
+
+struct T_swap_le_be_8 {
+	__host__ __device__ 
+	inline unsigned char operator()(unsigned char const& val) const { return val; }
+};
 //---------------------------------------------------------------------------
 
 
